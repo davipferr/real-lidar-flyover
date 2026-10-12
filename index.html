@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Fly over real USGS 3DEP LiDAR point clouds — billions of laser-measured points streamed from AWS Open Data and rendered with Three.js." />
+    <title>Real LiDAR Flyover</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8C%B2%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+
+    <aside class="panel" id="place-panel">
+      <header>
+        <div>
+          <h1>Real LiDAR Flyover</h1>
+          <div class="muted small">USGS 3DEP laser scans, streamed live</div>
+        </div>
+        <button class="icon collapse" data-collapse="place-panel" aria-label="Collapse" title="Collapse">–</button>
+      </header>
+      <div class="body">
+        <ul id="places" class="places"></ul>
+        <details id="browse">
+          <summary>Browse all USGS datasets</summary>
+          <input id="dataset-search" type="search" placeholder="Search e.g. Yellowstone, NYC, CO_…" aria-label="Search datasets" autocomplete="off" />
+          <div id="dataset-status" class="muted small" role="status" aria-live="polite"></div>
+          <ul id="datasets" class="results"></ul>
+        </details>
+      </div>
+    </aside>
+
+    <aside class="panel" id="display-panel">
+      <header>
+        <h2>Display</h2>
+        <button class="icon collapse" data-collapse="display-panel" aria-label="Collapse" title="Collapse">–</button>
+      </header>
+      <div class="body">
+        <div class="segmented" id="color-modes" role="group" aria-label="Colour by">
+          <button data-mode="rgb" title="Aerial photo colours (1)">RGB</button>
+          <button data-mode="elevation" title="Height above sea level (2)">Elevation</button>
+          <button data-mode="intensity" title="Laser return strength (3)">Intensity</button>
+          <button data-mode="classification" title="Ground, vegetation, buildings… (4)">Class</button>
+        </div>
+        <div id="legend" class="legend"></div>
+
+        <label class="field">
+          <span>Point budget <strong id="budget-label" class="mono">—</strong></span>
+          <input id="budget" type="range" min="0.5" max="12" step="0.5" aria-label="Point budget (millions)" />
+        </label>
+        <label class="field">
+          <span>Detail <strong id="detail-label" class="mono">—</strong></span>
+          <input id="detail" type="range" min="0.5" max="4" step="0.1" aria-label="Target point spacing in pixels" />
+        </label>
+        <label class="field">
+          <span>Point size <strong id="size-label" class="mono">—</strong></span>
+          <input id="size" type="range" min="0.5" max="3" step="0.05" aria-label="Point size" />
+        </label>
+        <label class="field">
+          <span>Eye-dome lighting <strong id="edl-label" class="mono">—</strong></span>
+          <input id="edl" type="range" min="0" max="2" step="0.05" aria-label="Eye-dome lighting strength" />
+        </label>
+
+        <details id="classes-box" open>
+          <summary>Classes</summary>
+          <ul id="classes" class="classes small"></ul>
+        </details>
+      </div>
+    </aside>
+
+    <section class="panel" id="stats" aria-label="Streaming statistics">
+      <div class="dataset-line"><strong id="dataset-name">—</strong> <span id="dataset-total" class="muted"></span></div>
+      <table class="small mono">
+        <tr><th>Drawing</th><td id="st-visible">—</td></tr>
+        <tr><th>In memory</th><td id="st-memory">—</td></tr>
+        <tr><th>Downloading</th><td id="st-loading">—</td></tr>
+        <tr><th>Downloaded</th><td id="st-bytes">—</td></tr>
+        <tr><th>Frame</th><td id="st-fps">—</td></tr>
+      </table>
+      <div id="cursor-line" class="small mono muted"></div>
+    </section>
+
+    <div id="toolbar" role="group" aria-label="Camera">
+      <button data-control="orbit" class="active" title="Drag to pan, right-drag to rotate, wheel to zoom (F toggles)">🛰 Orbit</button>
+      <button data-control="fly" title="WASD to move, Q/E down/up, drag to look, wheel for speed (F toggles)">✈ Fly</button>
+      <button id="autorotate" title="Slowly circle the target (R)">⟳ Circle</button>
+      <button id="reset" title="Back to the starting view (Home)">⌂ Reset</button>
+      <span id="speed" class="mono small muted" hidden></span>
+    </div>
+
+    <div id="hint" class="small muted">Double-click a point to fly to it</div>
+
+    <div id="info" class="panel small" hidden>
+      <header>
+        <strong id="info-title">Point</strong>
+        <button class="icon" id="info-close" aria-label="Close">×</button>
+      </header>
+      <table class="mono" id="info-rows"></table>
+    </div>
+
+    <footer id="credit" class="small">
+      Data: <a href="https://www.usgs.gov/3d-elevation-program" target="_blank" rel="noopener">USGS 3DEP</a> via
+      <a href="https://registry.opendata.aws/usgs-lidar/" target="_blank" rel="noopener">AWS Open Data</a> ·
+      <a href="https://entwine.io/" target="_blank" rel="noopener">Entwine</a> tiles
+    </footer>
+
+    <div id="loading" role="status" aria-live="polite">Loading…</div>
+    <div id="toast" role="status" aria-live="polite" hidden>
+      <span class="msg"></span>
+      <button class="icon" aria-label="Dismiss">×</button>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
